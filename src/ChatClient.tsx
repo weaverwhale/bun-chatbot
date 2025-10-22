@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sidebar } from "@/components/Sidebar";
 import { SettingsModal } from "@/components/SettingsModal";
-import { Send, Bot, User, Loader2, Settings } from "lucide-react";
+import { Send, Bot, User, Loader2, Settings, Moon, Sun } from "lucide-react";
 import {
   useEffect,
   useRef,
@@ -15,6 +15,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import { useConversations, type Message } from "@/hooks/useConversations";
+import { useDarkMode } from "@/hooks/useDarkMode";
 import { getModelLabel } from "@/lib/models";
 
 const examplePrompts = [
@@ -51,6 +52,8 @@ export function ChatClient() {
     deleteConversation,
     updateConversationTitle,
   } = useConversations();
+
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -237,12 +240,25 @@ export function ChatClient() {
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {getModelLabel(model)}
           </div>
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              className="h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsSettingsOpen(true)}
-              className="h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
+              className="h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             >
               <Settings className="w-4 h-4" />
             </Button>
@@ -266,10 +282,10 @@ export function ChatClient() {
                       onClick={() => setInput(example.prompt)}
                       className="p-4 text-left rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                     >
-                      <div className="font-medium text-sm mb-1">
+                      <div className="font-medium text-sm mb-1 text-gray-800 dark:text-gray-100">
                         {example.title}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {example.description}
                       </div>
                     </button>

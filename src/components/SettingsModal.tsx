@@ -31,16 +31,24 @@ export function SettingsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#2f2f2f] rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-[#2f2f2f] rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/10">
-          <h2 className="text-xl font-semibold">Settings</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Settings
+          </h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-9 w-9 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+            className="h-9 w-9 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -50,7 +58,10 @@ export function SettingsModal({
         <div className="p-6 space-y-6">
           {/* Model Selection */}
           <div className="space-y-2">
-            <Label htmlFor="model-select" className="text-sm font-medium">
+            <Label
+              htmlFor="model-select"
+              className="text-sm font-medium text-gray-900 dark:text-gray-100"
+            >
               Model
             </Label>
             <Select value={model} onValueChange={setModel}>
@@ -63,7 +74,7 @@ export function SettingsModal({
                     <div className="flex items-center gap-2">
                       <Bot className="w-3 h-3" />
                       <span>{modelOption.label}</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         ({modelOption.provider || "OpenAI"})
                       </span>
                     </div>
@@ -75,7 +86,10 @@ export function SettingsModal({
 
           {/* System Prompt */}
           <div className="space-y-2">
-            <Label htmlFor="system-prompt" className="text-sm font-medium">
+            <Label
+              htmlFor="system-prompt"
+              className="text-sm font-medium text-gray-900 dark:text-gray-100"
+            >
               System Instructions
             </Label>
             <Textarea
