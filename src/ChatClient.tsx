@@ -232,6 +232,7 @@ export function ChatClient() {
       }
 
       let assistantMessage = "";
+      let isFirstChunk = true;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -241,6 +242,12 @@ export function ChatClient() {
         const chunk = decoder.decode(value);
         assistantMessage += chunk;
         setStreamingMessage(assistantMessage);
+        
+        // Clear loading state on first chunk
+        if (isFirstChunk) {
+          setIsLoading(false);
+          isFirstChunk = false;
+        }
       }
 
       // Add the complete assistant message to history
@@ -365,7 +372,7 @@ export function ChatClient() {
                     {/* Message Content */}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
-                        {message.role === "user" ? "You" : "Bun"}
+                        {message.role === "user" ? "You" : "AI"}
                       </div>
                       <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 prose prose-slate dark:prose-invert max-w-none prose-pre:bg-[#0d1117] prose-pre:text-gray-100 prose-code:text-sm">
                         {message.role === "user" ? (
@@ -384,6 +391,28 @@ export function ChatClient() {
                 </div>
               ))}
 
+              {/* Loading state before streaming starts */}
+              {isLoading && !streamingMessage && (
+                <div className="group px-4 py-8 w-full">
+                  <div className="flex gap-4 md:gap-6 mx-auto max-w-3xl">
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center text-white">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
+                        AI
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm">Thinking...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Streaming response */}
               {streamingMessage && (
                 <div className="group px-4 py-8 w-full">
                   <div className="flex gap-4 md:gap-6 mx-auto max-w-3xl">
