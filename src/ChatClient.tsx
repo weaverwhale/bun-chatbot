@@ -446,10 +446,17 @@ export function ChatClient() {
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            p: ({ children }) => (
+                              <p>
+                                {children}
+                                <span className="inline-block w-1 h-5 bg-gray-500 ml-0.5 animate-pulse align-middle" />
+                              </p>
+                            ),
+                          }}
                         >
                           {streamingMessage}
                         </ReactMarkdown>
-                        <span className="inline-block w-1 h-5 bg-gray-500 ml-0.5 animate-pulse" />
                       </div>
                     </div>
                   </div>
