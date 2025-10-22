@@ -1,0 +1,21 @@
+# Dependencies
+node_modules
+bun.lock
+
+# Build output
+dist
+build
+.next
+out
+
+# Misc
+.DS_Store
+*.log
+*.db
+conversations.db
+
+# Config files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+

@@ -30,9 +30,9 @@ export const conversationRoutes = {
     // Get all conversations
     async GET(req: Request) {
       try {
-        const conversations = db.query(
-          "SELECT * FROM conversations ORDER BY updated_at DESC"
-        ).all();
+        const conversations = db
+          .query("SELECT * FROM conversations ORDER BY updated_at DESC")
+          .all();
         return Response.json(conversations);
       } catch (error: any) {
         console.error("Get conversations error:", error);
@@ -47,16 +47,15 @@ export const conversationRoutes = {
       try {
         const body = await req.json();
         const { title = "New Chat" } = body;
-        
-        const result = db.run(
-          "INSERT INTO conversations (title) VALUES (?)",
-          [title]
-        );
-        
-        const conversation = db.query(
-          "SELECT * FROM conversations WHERE id = ?"
-        ).get(result.lastInsertRowid);
-        
+
+        const result = db.run("INSERT INTO conversations (title) VALUES (?)", [
+          title,
+        ]);
+
+        const conversation = db
+          .query("SELECT * FROM conversations WHERE id = ?")
+          .get(result.lastInsertRowid);
+
         return Response.json(conversation);
       } catch (error: any) {
         console.error("Create conversation error:", error);
@@ -73,21 +72,23 @@ export const conversationRoutes = {
     async GET(req: Request) {
       try {
         const id = (req as any).params.id;
-        const conversation = db.query(
-          "SELECT * FROM conversations WHERE id = ?"
-        ).get(id);
-        
+        const conversation = db
+          .query("SELECT * FROM conversations WHERE id = ?")
+          .get(id);
+
         if (!conversation) {
           return Response.json(
             { error: "Conversation not found" },
             { status: 404 }
           );
         }
-        
-        const messages = db.query(
-          "SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC"
-        ).all(id);
-        
+
+        const messages = db
+          .query(
+            "SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC"
+          )
+          .all(id);
+
         return Response.json({ ...conversation, messages });
       } catch (error: any) {
         console.error("Get conversation error:", error);
@@ -103,23 +104,20 @@ export const conversationRoutes = {
         const id = (req as any).params.id;
         const body = await req.json();
         const { title } = body;
-        
+
         if (!title) {
-          return Response.json(
-            { error: "Title is required" },
-            { status: 400 }
-          );
+          return Response.json({ error: "Title is required" }, { status: 400 });
         }
-        
+
         db.run(
           "UPDATE conversations SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
           [title, id]
         );
-        
-        const conversation = db.query(
-          "SELECT * FROM conversations WHERE id = ?"
-        ).get(id);
-        
+
+        const conversation = db
+          .query("SELECT * FROM conversations WHERE id = ?")
+          .get(id);
+
         return Response.json(conversation);
       } catch (error: any) {
         console.error("Update conversation error:", error);
@@ -145,4 +143,3 @@ export const conversationRoutes = {
     },
   },
 };
-

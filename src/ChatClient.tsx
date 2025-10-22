@@ -2,14 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sidebar } from "@/components/Sidebar";
 import { SettingsModal } from "@/components/SettingsModal";
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Loader2,
-  Settings
-} from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { Send, Bot, User, Loader2, Settings } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -33,28 +33,30 @@ const examplePrompts = [
   {
     title: "Write code",
     description: "Help me build a React component",
-    prompt: "Help me build a React component with TypeScript"
+    prompt: "Help me build a React component with TypeScript",
   },
   {
     title: "Debug an issue",
     description: "Find and fix errors in my code",
-    prompt: "I'm getting an error in my code. Can you help me debug it?"
+    prompt: "I'm getting an error in my code. Can you help me debug it?",
   },
   {
     title: "Explain concepts",
     description: "Learn about programming topics",
-    prompt: "Can you explain how async/await works in JavaScript?"
+    prompt: "Can you explain how async/await works in JavaScript?",
   },
   {
     title: "Optimize code",
     description: "Make my code faster and cleaner",
-    prompt: "Can you review my code and suggest optimizations?"
-  }
+    prompt: "Can you review my code and suggest optimizations?",
+  },
 ];
 
 export function ChatClient() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    number | null
+  >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -77,8 +79,9 @@ export function ChatClient() {
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height =
+        Math.min(textareaRef.current.scrollHeight, 200) + "px";
     }
   }, [input]);
 
@@ -119,7 +122,7 @@ export function ChatClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: "New Chat" }),
       });
-      
+
       if (response.ok) {
         const newConversation = await response.json();
         setConversations([newConversation, ...conversations]);
@@ -136,9 +139,9 @@ export function ChatClient() {
       const response = await fetch(`/api/conversations/${id}`, {
         method: "DELETE",
       });
-      
+
       if (response.ok) {
-        setConversations(conversations.filter(c => c.id !== id));
+        setConversations(conversations.filter((c) => c.id !== id));
         if (currentConversationId === id) {
           setCurrentConversationId(null);
           setMessages([]);
@@ -164,7 +167,7 @@ export function ChatClient() {
 
   const sendMessage = async (e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
-    
+
     if (!input.trim() || isLoading) return;
 
     // Create conversation if none exists
@@ -176,7 +179,7 @@ export function ChatClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: input.trim().slice(0, 50) }),
         });
-        
+
         if (response.ok) {
           const newConversation = await response.json();
           conversationId = newConversation.id;
@@ -189,12 +192,12 @@ export function ChatClient() {
       }
     }
 
-    const userMessage: Message = { 
-      role: "user", 
+    const userMessage: Message = {
+      role: "user",
       content: input.trim(),
     };
     const newMessages = [...messages, userMessage];
-    
+
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
@@ -212,7 +215,10 @@ export function ChatClient() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          messages: newMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
           model,
           systemPrompt: systemPrompt.trim() || undefined,
           conversationId,
@@ -236,13 +242,13 @@ export function ChatClient() {
 
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) break;
 
         const chunk = decoder.decode(value);
         assistantMessage += chunk;
         setStreamingMessage(assistantMessage);
-        
+
         // Clear loading state on first chunk
         if (isFirstChunk) {
           setIsLoading(false);
@@ -252,18 +258,21 @@ export function ChatClient() {
 
       // Add the complete assistant message to history
       if (assistantMessage) {
-        setMessages([...newMessages, { 
-          role: "assistant", 
-          content: assistantMessage,
-        }]);
+        setMessages([
+          ...newMessages,
+          {
+            role: "assistant",
+            content: assistantMessage,
+          },
+        ]);
       }
       setStreamingMessage("");
     } catch (error: any) {
       console.error("Chat error:", error);
       setMessages([
         ...newMessages,
-        { 
-          role: "assistant", 
+        {
+          role: "assistant",
           content: `Error: ${error.message}`,
         },
       ]);
@@ -303,12 +312,16 @@ export function ChatClient() {
       />
 
       {/* Main Chat Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-[260px]' : 'ml-0'}`}>
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? "lg:ml-[260px]" : "ml-0"}`}
+      >
         {/* Header*/}
         <div className="sticky top-0 z-10 h-14 border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#212121]/80 backdrop-blur-md flex items-center justify-between px-3">
           <div className="flex-1"></div>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {model.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}
+            {model
+              .replace(/-/g, " ")
+              .replace(/\b\w/g, (char) => char.toUpperCase())}
           </div>
           <div className="flex-1 flex justify-end">
             <Button
@@ -339,36 +352,39 @@ export function ChatClient() {
                       onClick={() => setInput(example.prompt)}
                       className="p-4 text-left rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                     >
-                      <div className="font-medium text-sm mb-1">{example.title}</div>
-                      <div className="text-xs text-gray-500">{example.description}</div>
+                      <div className="font-medium text-sm mb-1">
+                        {example.title}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {example.description}
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
           )}
-          
+
           {(messages.length > 0 || streamingMessage) && (
             <div className="max-w-3xl mx-auto w-full py-8">
               {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className="group px-4 py-8 w-full"
-                >
+                <div key={index} className="group px-4 py-8 w-full">
                   <div className="flex gap-4 md:gap-6 mx-auto max-w-3xl">
                     {/* Avatar */}
-                    <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white ${
-                      message.role === "user" 
-                        ? "bg-[#5436DA]" 
-                        : "bg-[#10A37F]"
-                    }`}>
+                    <div
+                      className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white ${
+                        message.role === "user"
+                          ? "bg-[#5436DA]"
+                          : "bg-[#10A37F]"
+                      }`}
+                    >
                       {message.role === "user" ? (
                         <User className="w-4 h-4" />
                       ) : (
                         <Bot className="w-4 h-4" />
                       )}
                     </div>
-                    
+
                     {/* Message Content */}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
@@ -376,7 +392,9 @@ export function ChatClient() {
                       </div>
                       <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 prose prose-slate dark:prose-invert max-w-none prose-pre:bg-[#0d1117] prose-pre:text-gray-100 prose-code:text-sm">
                         {message.role === "user" ? (
-                          <div className="whitespace-pre-wrap">{message.content}</div>
+                          <div className="whitespace-pre-wrap">
+                            {message.content}
+                          </div>
                         ) : (
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
@@ -398,7 +416,7 @@ export function ChatClient() {
                     <div className="shrink-0 w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center text-white">
                       <Bot className="w-4 h-4" />
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
                         AI
@@ -419,7 +437,7 @@ export function ChatClient() {
                     <div className="shrink-0 w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center text-white">
                       <Bot className="w-4 h-4" />
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
                         Bun
@@ -456,13 +474,13 @@ export function ChatClient() {
                 disabled={isLoading}
                 className="min-h-[52px] max-h-[200px] resize-none pr-12 px-4 py-3.5 text-base leading-6 rounded-3xl border-gray-200 dark:border-gray-700 shadow-sm focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 field-sizing-content"
                 rows={1}
-                style={{ height: 'auto', overflow: 'hidden' }}
+                style={{ height: "auto", overflow: "hidden" }}
               />
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isLoading || !input.trim()}
                 size="icon"
-                className="absolute right-2 bottom-2 h-8 w-8 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400"
+                className="absolute right-2.5 bottom-2.5 h-8 w-8 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

@@ -1,13 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Bot } from "lucide-react";
 
 const availableModels = [
   { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
-  { value: "claude-4.5-sonnet", label: "Claude 4.5 Sonnet", provider: "Anthropic" },
-  { value: "huihui-gpt-oss-20b-abliterated", label: "GPT OSS 20B Abliterated" }
+  {
+    value: "claude-4.5-sonnet",
+    label: "Claude 4.5 Sonnet",
+    provider: "Anthropic",
+  },
+  { value: "huihui-gpt-oss-20b-abliterated", label: "GPT OSS 20B Abliterated" },
 ];
 
 interface SettingsModalProps {
@@ -62,7 +72,9 @@ export function SettingsModal({
                     <div className="flex items-center gap-2">
                       <Bot className="w-3 h-3" />
                       <span>{modelOption.label}</span>
-                      <span className="text-xs text-gray-500">({modelOption.provider || 'OpenAI'})</span>
+                      <span className="text-xs text-gray-500">
+                        ({modelOption.provider || "OpenAI"})
+                      </span>
                     </div>
                   </SelectItem>
                 ))}
@@ -87,7 +99,7 @@ export function SettingsModal({
 
         {/* Footer */}
         <div className="flex justify-end gap-3 p-5 border-t border-gray-200 dark:border-white/10">
-          <Button 
+          <Button
             onClick={onClose}
             className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 px-6"
           >
@@ -98,4 +110,3 @@ export function SettingsModal({
     </div>
   );
 }
-

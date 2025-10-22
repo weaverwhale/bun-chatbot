@@ -12,7 +12,7 @@ const server = serve({
     // Serve index.html for all unmatched routes.
     "/*": index,
 
-    "/api/hello/:name": async req => {
+    "/api/hello/:name": async (req) => {
       const name = req.params.name;
       return Response.json({
         message: `Hello, ${name}!`,
@@ -23,7 +23,12 @@ const server = serve({
       async POST(req) {
         try {
           const body = await req.json();
-          const { messages, model = "gpt-4o-mini", systemPrompt, conversationId } = body;
+          const {
+            messages,
+            model = "gpt-4o-mini",
+            systemPrompt,
+            conversationId,
+          } = body;
 
           if (!process.env.OPENAI_API_KEY) {
             return Response.json(
