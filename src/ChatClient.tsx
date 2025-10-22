@@ -279,7 +279,10 @@ export function ChatClient() {
                   {examplePrompts.map((example, index) => (
                     <button
                       key={index}
-                      onClick={() => setInput(example.prompt)}
+                      onClick={() => {
+                        setInput(example.prompt);
+                        textareaRef.current?.focus();
+                      }}
                       className="p-4 text-left rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                     >
                       <div className="font-medium text-sm mb-1 text-gray-800 dark:text-gray-100">
