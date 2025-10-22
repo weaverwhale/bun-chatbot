@@ -18,7 +18,8 @@ import { SettingsModal } from "@/components/SettingsModal";
 
 import { useConversations, type Message } from "@/hooks/useConversations";
 import { useDarkMode } from "@/hooks/useDarkMode";
-import { availableModels, DEFAULT_MODEL, getModelLabel } from "@/lib/models";
+import { useModelSettings } from "@/hooks/useModelSettings";
+import { getModelLabel } from "@/lib/models";
 import { examplePrompts } from "@/lib/prompts";
 
 const getTimeOfDay = () => {
@@ -42,12 +43,10 @@ export function ChatClient() {
 
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
+  const { model, setModel, systemPrompt, setSystemPrompt } = useModelSettings();
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState(
-    availableModels?.[0]?.value || DEFAULT_MODEL
-  );
-  const [systemPrompt, setSystemPrompt] = useState("");
   const [streamingMessage, setStreamingMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
