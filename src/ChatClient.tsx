@@ -10,6 +10,10 @@ import {
   Settings
 } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
 
 interface Message {
   role: "user" | "assistant";
@@ -235,27 +239,8 @@ export function ChatClient() {
         if (done) break;
 
         const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            
-            if (data === "[DONE]") {
-              continue;
-            }
-
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.content) {
-                assistantMessage += parsed.content;
-                setStreamingMessage(assistantMessage);
-              }
-            } catch (e) {
-              // Skip invalid JSON
-            }
-          }
-        }
+        assistantMessage += chunk;
+        setStreamingMessage(assistantMessage);
       }
 
       // Add the complete assistant message to history
@@ -382,8 +367,17 @@ export function ChatClient() {
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
                         {message.role === "user" ? "You" : "Bun"}
                       </div>
-                      <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 whitespace-pre-wrap wrap-break-word">
-                        {message.content}
+                      <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 prose prose-slate dark:prose-invert max-w-none prose-pre:bg-[#0d1117] prose-pre:text-gray-100 prose-code:text-sm">
+                        {message.role === "user" ? (
+                          <div className="whitespace-pre-wrap">{message.content}</div>
+                        ) : (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -399,10 +393,15 @@ export function ChatClient() {
                     
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
-                        ChatGPT
+                        Bun
                       </div>
-                      <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 whitespace-pre-wrap wrap-break-word">
-                        {streamingMessage}
+                      <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 prose prose-slate dark:prose-invert max-w-none prose-pre:bg-[#0d1117] prose-pre:text-gray-100 prose-code:text-sm">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                        >
+                          {streamingMessage}
+                        </ReactMarkdown>
                         <span className="inline-block w-1 h-5 bg-gray-500 ml-0.5 animate-pulse" />
                       </div>
                     </div>
@@ -426,7 +425,7 @@ export function ChatClient() {
                 onKeyDown={handleKeyDown}
                 placeholder="Message AI"
                 disabled={isLoading}
-                className="min-h-[52px] max-h-[200px] resize-none pr-12 px-4 py-3.5 text-base leading-6 rounded-3xl border-gray-200 dark:border-gray-700 shadow-sm focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 [field-sizing:content]"
+                className="min-h-[52px] max-h-[200px] resize-none pr-12 px-4 py-3.5 text-base leading-6 rounded-3xl border-gray-200 dark:border-gray-700 shadow-sm focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 field-sizing-content"
                 rows={1}
                 style={{ height: 'auto', overflow: 'hidden' }}
               />

@@ -5,8 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { X, Bot } from "lucide-react";
 
 const availableModels = [
-  { value: "gpt-4.1", label: "GPT-4o" },
-  { value: "gpt-4.1-mini", label: "GPT-4o Mini" },
+  { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
+  { value: "claude-4.5-sonnet", label: "Claude 4.5 Sonnet", provider: "Anthropic" },
+  { value: "huihui-gpt-oss-20b-abliterated", label: "GPT OSS 20B Abliterated" }
 ];
 
 interface SettingsModalProps {
@@ -61,6 +62,7 @@ export function SettingsModal({
                     <div className="flex items-center gap-2">
                       <Bot className="w-3 h-3" />
                       <span>{modelOption.label}</span>
+                      <span className="text-xs text-gray-500">({modelOption.provider || 'OpenAI'})</span>
                     </div>
                   </SelectItem>
                 ))}

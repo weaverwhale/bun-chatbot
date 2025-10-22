@@ -1,32 +1,16 @@
 import { serve } from "bun";
-import OpenAI from "openai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { streamText } from "ai";
 import index from "./index.html";
 import { db, conversationRoutes } from "./conversation";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const server = serve({
   port: process.env.PORT || 3000,
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,
-
-    "/api/hello": {
-      async GET(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "GET",
-        });
-      },
-      async PUT(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "PUT",
-        });
-      },
-    },
 
     "/api/hello/:name": async req => {
       const name = req.params.name;
@@ -55,18 +39,6 @@ const server = serve({
             );
           }
 
-          // Build messages array with optional system prompt
-          const chatMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
-          
-          if (systemPrompt) {
-            chatMessages.push({
-              role: "system",
-              content: systemPrompt,
-            });
-          }
-
-          chatMessages.push(...messages);
-
           // Save user message to database if conversationId is provided
           if (conversationId) {
             const lastMessage = messages[messages.length - 1];
@@ -82,54 +54,50 @@ const server = serve({
             }
           }
 
-          // Create streaming response
-          const stream = await openai.chat.completions.create({
-            model,
-            messages: chatMessages,
-            stream: true,
-          });
+          // Determine which AI provider to use based on model name
+          let aiModel;
+          if (model.startsWith("claude-")) {
+            // Anthropic Claude models
+            const anthropic = createAnthropic({
+              apiKey: process.env.ANTHROPIC_API_KEY,
+            });
+            aiModel = anthropic(model);
+          } else if (model.startsWith("gemini-")) {
+            // Google Gemini models
+            const google = createGoogleGenerativeAI({
+              apiKey: process.env.GOOGLE_API_KEY,
+            });
+            aiModel = google(model);
+          } else {
+            // Default to OpenAI
+            const openai = createOpenAI({
+              apiKey: process.env.OPENAI_API_KEY,
+            });
+            aiModel = openai(model);
+          }
 
-          // Create a readable stream for the response
-          const encoder = new TextEncoder();
-          let fullResponse = "";
-          const readableStream = new ReadableStream({
-            async start(controller) {
-              try {
-                for await (const chunk of stream) {
-                  const content = chunk.choices[0]?.delta?.content || "";
-                  if (content) {
-                    fullResponse += content;
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
-                  }
-                }
-                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-                
-                // Save assistant message to database if conversationId is provided
-                if (conversationId && fullResponse) {
-                  db.run(
-                    "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
-                    [conversationId, "assistant", fullResponse]
-                  );
-                  db.run(
-                    "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-                    [conversationId]
-                  );
-                }
-                
-                controller.close();
-              } catch (error) {
-                controller.error(error);
+          // Create streaming response using AI SDK
+          const result = streamText({
+            model: aiModel,
+            messages,
+            system: systemPrompt || undefined,
+            async onFinish({ text }) {
+              // Save assistant message to database if conversationId is provided
+              if (conversationId && text) {
+                db.run(
+                  "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
+                  [conversationId, "assistant", text]
+                );
+                db.run(
+                  "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                  [conversationId]
+                );
               }
             },
           });
 
-          return new Response(readableStream, {
-            headers: {
-              "Content-Type": "text/event-stream",
-              "Cache-Control": "no-cache",
-              "Connection": "keep-alive",
-            },
-          });
+          // Return the streaming response
+          return result.toTextStreamResponse();
         } catch (error: any) {
           console.error("Chat API error:", error);
           return Response.json(
