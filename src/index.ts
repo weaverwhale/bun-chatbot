@@ -1,6 +1,6 @@
 import { serve } from "bun";
-import index from "./index.html";
-import { apiRouter } from "./api/router";
+import index from "@/index.html";
+import { apiRouter } from "@/api/router";
 
 const server = serve({
   port: process.env.PORT || 6789,

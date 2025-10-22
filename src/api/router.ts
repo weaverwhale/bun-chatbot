@@ -6,7 +6,7 @@ import {
   getConversation,
   updateConversation,
   deleteConversation,
-} from "./endpoints";
+} from "@/api/endpoints";
 
 export const apiRouter = createRouter({
   chat,
@@ -18,4 +18,3 @@ export const apiRouter = createRouter({
 });
 
 export type APIRouter = typeof apiRouter;
-

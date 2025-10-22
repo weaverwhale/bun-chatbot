@@ -67,7 +67,7 @@ export function Sidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full bg-white dark:bg-[#171717] text-gray-800 dark:text-white border-r border-gray-200 dark:border-white/10 transition-all duration-300 ease-in-out z-40 flex flex-col ${
+        className={`fixed left-0 top-0 h-full bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-white border-r border-gray-200 dark:border-white/10 z-40 flex flex-col ${
           isOpen ? "w-[260px]" : "w-0"
         } overflow-hidden`}
       >
@@ -107,7 +107,7 @@ export function Sidebar({
                     className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                       currentConversationId === conversation.id
                         ? "bg-gray-100 dark:bg-white/10"
-                        : "hover:bg-gray-50 dark:hover:bg-white/5"
+                        : "hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
                     onMouseEnter={() => setHoveredId(conversation.id)}
                     onMouseLeave={() => setHoveredId(null)}

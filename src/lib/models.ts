@@ -18,6 +18,8 @@ export const availableModels: ModelOption[] = [
   },
 ];
 
+export const DEFAULT_MODEL = "gpt-4.1-mini";
+
 /**
  * Resolves a model value to its display label
  * @param modelValue - The model value

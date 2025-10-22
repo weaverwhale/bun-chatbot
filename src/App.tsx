@@ -1,5 +1,5 @@
-import { ChatClient } from "./ChatClient";
-import "./index.css";
+import { ChatClient } from "@/ChatClient";
+import "@/index.css";
 
 export function App() {
   return <ChatClient />;

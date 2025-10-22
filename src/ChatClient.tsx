@@ -1,7 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Sidebar } from "@/components/Sidebar";
-import { SettingsModal } from "@/components/SettingsModal";
 import { Send, Bot, User, Loader2, Settings, Moon, Sun } from "lucide-react";
 import {
   useEffect,
@@ -14,32 +10,23 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
+
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Sidebar } from "@/components/Sidebar";
+import { SettingsModal } from "@/components/SettingsModal";
+
 import { useConversations, type Message } from "@/hooks/useConversations";
 import { useDarkMode } from "@/hooks/useDarkMode";
-import { getModelLabel } from "@/lib/models";
+import { availableModels, DEFAULT_MODEL, getModelLabel } from "@/lib/models";
+import { examplePrompts } from "@/lib/prompts";
 
-const examplePrompts = [
-  {
-    title: "Write code",
-    description: "Help me build a React component",
-    prompt: "Help me build a React component with TypeScript",
-  },
-  {
-    title: "Debug an issue",
-    description: "Find and fix errors in my code",
-    prompt: "I'm getting an error in my code. Can you help me debug it?",
-  },
-  {
-    title: "Explain concepts",
-    description: "Learn about programming topics",
-    prompt: "Can you explain how async/await works in JavaScript?",
-  },
-  {
-    title: "Optimize code",
-    description: "Make my code faster and cleaner",
-    prompt: "Can you review my code and suggest optimizations?",
-  },
-];
+const getTimeOfDay = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 18) return "afternoon";
+  return "night";
+};
 
 export function ChatClient() {
   const {
@@ -57,13 +44,16 @@ export function ChatClient() {
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState("gpt-4.1-mini");
+  const [model, setModel] = useState(
+    availableModels?.[0]?.value || DEFAULT_MODEL
+  );
   const [systemPrompt, setSystemPrompt] = useState("");
   const [streamingMessage, setStreamingMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const timeOfDay = getTimeOfDay();
 
   // Wrapper functions to handle model state
   const loadConversation = async (id: number) => {
@@ -272,7 +262,7 @@ export function ChatClient() {
               <div className="max-w-2xl space-y-8">
                 <div className="space-y-3">
                   <div className="text-4xl font-medium text-gray-800 dark:text-gray-100">
-                    How can I help you today?
+                    How can I help you this {timeOfDay}?
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8">

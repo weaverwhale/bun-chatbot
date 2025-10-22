@@ -1,10 +1,12 @@
-import { createEndpoint } from "better-call";
 import { z } from "zod";
-import { db } from "../conversation";
+import { streamText, stepCountIs } from "ai";
+import { createEndpoint } from "better-call";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { streamText } from "ai";
+import { tools, toolDisplayNames } from "@/lib/tools";
+import { db } from "@/conversation";
+import { DEFAULT_MODEL } from "@/lib/models";
 
 // Schema definitions
 const MessageSchema = z.object({
@@ -39,7 +41,7 @@ export const chat = createEndpoint(
     method: "POST",
     body: z.object({
       messages: z.array(MessageSchema),
-      model: z.string().default("gpt-4.1-mini"),
+      model: z.string().default(DEFAULT_MODEL),
       systemPrompt: z.string().optional(),
       conversationId: z.number().optional(),
     }),
@@ -106,6 +108,8 @@ export const chat = createEndpoint(
       model: aiModel,
       messages,
       system: systemPrompt || undefined,
+      tools,
+      stopWhen: stepCountIs(10),
       async onFinish({ text }) {
         // Save assistant message to database if conversationId is provided
         if (conversationId && text) {
@@ -121,8 +125,40 @@ export const chat = createEndpoint(
       },
     });
 
-    // Return the streaming response
-    return result.toTextStreamResponse();
+    // Use fullStream to show tool usage and stream text properly
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of result.fullStream) {
+            if (chunk.type === "tool-call") {
+              // Get the display name from the mapping
+              const toolDisplayName =
+                toolDisplayNames[chunk.toolName] || chunk.toolName;
+              // Send tool call indicator
+              controller.enqueue(
+                encoder.encode(`\n\n**${toolDisplayName}**...\n\n`)
+              );
+            } else if (chunk.type === "text-delta") {
+              // Stream text as it comes
+              controller.enqueue(encoder.encode(chunk.text));
+            }
+          }
+          controller.close();
+        } catch (error) {
+          console.error("Stream error:", error);
+          controller.error(error);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   }
 );
 
