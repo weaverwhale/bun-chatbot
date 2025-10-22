@@ -25,6 +25,29 @@ interface Conversation {
   messages?: Message[];
 }
 
+const examplePrompts = [
+  {
+    title: "Write code",
+    description: "Help me build a React component",
+    prompt: "Help me build a React component with TypeScript"
+  },
+  {
+    title: "Debug an issue",
+    description: "Find and fix errors in my code",
+    prompt: "I'm getting an error in my code. Can you help me debug it?"
+  },
+  {
+    title: "Explain concepts",
+    description: "Learn about programming topics",
+    prompt: "Can you explain how async/await works in JavaScript?"
+  },
+  {
+    title: "Optimize code",
+    description: "Make my code faster and cleaner",
+    prompt: "Can you review my code and suggest optimizations?"
+  }
+];
+
 export function ChatClient() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
@@ -37,6 +60,7 @@ export function ChatClient() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,6 +69,14 @@ export function ChatClient() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+    }
+  }, [input]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -256,7 +288,7 @@ export function ChatClient() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f7f7f8] dark:bg-[#212121]">
+    <div className="flex h-screen bg-white dark:bg-[#212121]">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -280,108 +312,129 @@ export function ChatClient() {
 
       {/* Main Chat Area */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-[260px]' : 'ml-0'}`}>
-        {/* Header */}
-        <div className="h-16 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#2f2f2f] flex items-center justify-between px-4">
-          <div className="flex-1" />
-          <h1 className="text-lg font-semibold absolute left-1/2 transform -translate-x-1/2">
-            {currentConversationId ? conversations.find(c => c.id === currentConversationId)?.title || "Chat" : "Bun Chatbot"}
-          </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSettingsOpen(true)}
-            className="h-10 w-10"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
+        {/* Header*/}
+        <div className="sticky top-0 z-10 h-14 border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#212121]/80 backdrop-blur-md flex items-center justify-between px-3">
+          <div className="flex-1"></div>
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            {model.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}
+          </div>
+          <div className="flex-1 flex justify-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSettingsOpen(true)}
+              className="h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-4 py-8">
-            {messages.length === 0 && !streamingMessage && (
-              <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-[#19c37d] flex items-center justify-center">
-                  <Bot className="w-6 h-6 text-white" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-semibold">How can I help you today?</h3>
-                </div>
-              </div>
-            )}
-            
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`py-6 ${message.role === "assistant" ? "bg-[#f7f7f8] dark:bg-[#2f2f2f]" : ""}`}
-              >
-                <div className="max-w-3xl mx-auto flex gap-4 px-4">
-                  {/* Avatar */}
-                  <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.role === "user" 
-                      ? "bg-[#5436da]" 
-                      : "bg-[#19c37d]"
-                  }`}>
-                    {message.role === "user" ? (
-                      <User className="w-4 h-4 text-white" />
-                    ) : (
-                      <Bot className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                  
-                  {/* Message Content */}
-                  <div className="flex-1 space-y-2">
-                    <div className="text-sm font-semibold">
-                      {message.role === "user" ? "You" : "Bun"}
-                    </div>
-                    <div className="text-[15px] leading-7 whitespace-pre-wrap">
-                      {message.content}
-                    </div>
+          {messages.length === 0 && !streamingMessage && (
+            <div className="flex flex-col items-center justify-center h-full px-4 text-center">
+              <div className="max-w-2xl space-y-8">
+                <div className="space-y-3">
+                  <div className="text-4xl font-medium text-gray-800 dark:text-gray-100">
+                    How can I help you today?
                   </div>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8">
+                  {examplePrompts.map((example, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setInput(example.prompt)}
+                      className="p-4 text-left rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    >
+                      <div className="font-medium text-sm mb-1">{example.title}</div>
+                      <div className="text-xs text-gray-500">{example.description}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            ))}
+            </div>
+          )}
+          
+          {(messages.length > 0 || streamingMessage) && (
+            <div className="max-w-3xl mx-auto w-full py-8">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className="group px-4 py-8 w-full"
+                >
+                  <div className="flex gap-4 md:gap-6 mx-auto max-w-3xl">
+                    {/* Avatar */}
+                    <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white ${
+                      message.role === "user" 
+                        ? "bg-[#5436DA]" 
+                        : "bg-[#10A37F]"
+                    }`}>
+                      {message.role === "user" ? (
+                        <User className="w-4 h-4" />
+                      ) : (
+                        <Bot className="w-4 h-4" />
+                      )}
+                    </div>
+                    
+                    {/* Message Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
+                        {message.role === "user" ? "You" : "Bun"}
+                      </div>
+                      <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 whitespace-pre-wrap wrap-break-word">
+                        {message.content}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
 
-            {streamingMessage && (
-              <div className="py-6 bg-[#f7f7f8] dark:bg-[#2f2f2f]">
-                <div className="max-w-3xl mx-auto flex gap-4 px-4">
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-[#19c37d] flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                  
-                  <div className="flex-1 space-y-2">
-                    <div className="text-sm font-semibold">Bun Chatbot</div>
-                    <div className="text-[15px] leading-7 whitespace-pre-wrap">
-                      {streamingMessage}
-                      <span className="inline-block w-1.5 h-5 bg-gray-900 dark:bg-gray-100 ml-1 animate-pulse" />
+              {streamingMessage && (
+                <div className="group px-4 py-8 w-full">
+                  <div className="flex gap-4 md:gap-6 mx-auto max-w-3xl">
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center text-white">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
+                        ChatGPT
+                      </div>
+                      <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 whitespace-pre-wrap wrap-break-word">
+                        {streamingMessage}
+                        <span className="inline-block w-1 h-5 bg-gray-500 ml-0.5 animate-pulse" />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div ref={messagesEndRef} />
-          </div>
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-[#2f2f2f] p-4">
+        <div className="bg-white dark:bg-[#212121] p-4">
           <div className="max-w-3xl mx-auto">
             <form onSubmit={sendMessage} className="relative">
               <Textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Message Bun Chatbot"
+                placeholder="Message AI"
                 disabled={isLoading}
-                className="min-h-[52px] max-h-[200px] resize-none pr-12 text-base rounded-2xl"
+                className="min-h-[52px] max-h-[200px] resize-none pr-12 px-4 py-3.5 text-base leading-6 rounded-3xl border-gray-200 dark:border-gray-700 shadow-sm focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 [field-sizing:content]"
                 rows={1}
+                style={{ height: 'auto', overflow: 'hidden' }}
               />
               <Button 
                 type="submit" 
                 disabled={isLoading || !input.trim()}
                 size="icon"
-                className="absolute right-2 bottom-2 h-8 w-8 rounded-lg"
+                className="absolute right-2 bottom-2 h-8 w-8 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -390,6 +443,9 @@ export function ChatClient() {
                 )}
               </Button>
             </form>
+            <div className="text-center text-xs text-gray-500 mt-3">
+              AI can make mistakes. Check important info.
+            </div>
           </div>
         </div>
       </div>
