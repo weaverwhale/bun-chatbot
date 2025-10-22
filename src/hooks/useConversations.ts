@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { api } from "@/api/client";
 
 export interface Message {
   role: "user" | "assistant";
@@ -9,10 +10,9 @@ export interface Message {
 export interface Conversation {
   id: number;
   title: string;
-  model?: string;
+  model: string | null;
   created_at: string;
   updated_at: string;
-  messages?: Message[];
 }
 
 export function useConversations() {
@@ -29,11 +29,14 @@ export function useConversations() {
 
   const loadConversations = async () => {
     try {
-      const response = await fetch("/api/conversations");
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data);
+      const response = await api("/api/conversations", {
+        method: "GET",
+      });
+      if (response.error) {
+        console.error("Failed to load conversations:", response.error);
+        return;
       }
+      setConversations(response.data);
     } catch (error) {
       console.error("Failed to load conversations:", error);
     }
@@ -41,17 +44,31 @@ export function useConversations() {
 
   const loadConversation = async (id: number) => {
     try {
-      const response = await fetch(`/api/conversations/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentConversationId(id);
-        setMessages(data.messages || []);
-        return data as Conversation;
+      const response = await api("/api/conversations/:id", {
+        method: "GET",
+        params: { id: id.toString() },
+      });
+      if (response.error) {
+        console.error("Failed to load conversation:", response.error);
+        return null;
       }
+      setCurrentConversationId(id);
+      const validMessages = response.data.messages
+        .filter(
+          (msg): msg is typeof msg & { role: "user" | "assistant" } =>
+            msg.role === "user" || msg.role === "assistant"
+        )
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp,
+        }));
+      setMessages(validMessages);
+      return response.data;
     } catch (error) {
       console.error("Failed to load conversation:", error);
+      return null;
     }
-    return null;
   };
 
   const createNewConversation = async (
@@ -59,37 +76,36 @@ export function useConversations() {
     model?: string
   ) => {
     try {
-      const response = await fetch("/api/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, model }),
+      const response = await api("@post/api/conversations", {
+        body: { title, model },
       });
-
-      if (response.ok) {
-        const newConversation = await response.json();
-        setConversations([newConversation, ...conversations]);
-        setCurrentConversationId(newConversation.id);
-        setMessages([]);
-        return newConversation;
+      if (response.error) {
+        console.error("Failed to create conversation:", response.error);
+        return null;
       }
+      setConversations([response.data, ...conversations]);
+      setCurrentConversationId(response.data.id);
+      setMessages([]);
+      return response.data;
     } catch (error) {
       console.error("Failed to create conversation:", error);
+      return null;
     }
-    return null;
   };
 
   const deleteConversation = async (id: number) => {
     try {
-      const response = await fetch(`/api/conversations/${id}`, {
-        method: "DELETE",
+      const response = await api("@delete/api/conversations/:id", {
+        params: { id: id.toString() },
       });
-
-      if (response.ok) {
-        setConversations(conversations.filter((c) => c.id !== id));
-        if (currentConversationId === id) {
-          setCurrentConversationId(null);
-          setMessages([]);
-        }
+      if (response.error) {
+        console.error("Failed to delete conversation:", response.error);
+        return;
+      }
+      setConversations(conversations.filter((c) => c.id !== id));
+      if (currentConversationId === id) {
+        setCurrentConversationId(null);
+        setMessages([]);
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
@@ -98,11 +114,14 @@ export function useConversations() {
 
   const updateConversationTitle = async (id: number, title: string) => {
     try {
-      await fetch(`/api/conversations/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
+      const response = await api("@put/api/conversations/:id", {
+        params: { id: id.toString() },
+        body: { title },
       });
+      if (response.error) {
+        console.error("Failed to update conversation title:", response.error);
+        return;
+      }
       loadConversations();
     } catch (error) {
       console.error("Failed to update conversation title:", error);
