@@ -46,10 +46,10 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="fixed top-2 left-3 z-50 h-10 w-10 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
+            className="fixed top-2.5 left-3 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             aria-label="Open sidebar"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </Button>
 
           {/* New conversation button (shown when sidebar is closed) */}
@@ -57,10 +57,10 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={() => onNewConversation()}
-            className="fixed top-2 left-15 z-50 h-10 w-10 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
+            className="fixed top-2.5 left-15 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             aria-label="New conversation"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
           </Button>
         </>
       )}
@@ -78,16 +78,16 @@ export function Sidebar({
               variant="ghost"
               size="icon"
               onClick={onToggle}
-              className=" hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
+              className="h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
               aria-label="Close sidebar"
             >
-              <PanelLeftClose className="w-5 h-5" />
+              <PanelLeftClose className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onNewConversation()}
-              className=" hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
+              className="h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             >
               <Plus className="w-4 h-4" />
             </Button>

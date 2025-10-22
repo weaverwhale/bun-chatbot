@@ -412,7 +412,7 @@ export function ChatClient() {
                 type="submit"
                 disabled={isLoading || !input.trim()}
                 size="icon"
-                className="absolute right-2.5 bottom-2.5 h-8 w-8 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400"
+                className="absolute right-2.5 bottom-2.5 h-8 w-8 rounded-lg bg-black dark:bg-white text-white dark:text-black disabled:dark:text-white hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

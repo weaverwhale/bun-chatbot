@@ -3,7 +3,7 @@ import index from "./index.html";
 import { apiRouter } from "./api/router";
 
 const server = serve({
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 6789,
 
   routes: {
     // API routes are handled by better-call router
