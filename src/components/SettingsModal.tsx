@@ -9,16 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Bot } from "lucide-react";
-
-const availableModels = [
-  { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
-  {
-    value: "claude-4.5-sonnet",
-    label: "Claude 4.5 Sonnet",
-    provider: "Anthropic",
-  },
-  { value: "huihui-gpt-oss-20b-abliterated", label: "GPT OSS 20B Abliterated" },
-];
+import { availableModels } from "@/lib/models";
 
 interface SettingsModalProps {
   isOpen: boolean;

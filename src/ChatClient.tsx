@@ -14,20 +14,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  timestamp?: string;
-}
-
-interface Conversation {
-  id: number;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  messages?: Message[];
-}
+import { useConversations, type Message } from "@/hooks/useConversations";
+import { getModelLabel } from "@/lib/models";
 
 const examplePrompts = [
   {
@@ -53,14 +41,20 @@ const examplePrompts = [
 ];
 
 export function ChatClient() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversationId, setCurrentConversationId] = useState<
-    number | null
-  >(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const {
+    conversations,
+    currentConversationId,
+    messages,
+    setMessages,
+    loadConversation,
+    createNewConversation,
+    deleteConversation,
+    updateConversationTitle,
+  } = useConversations();
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState("gpt-4o-mini");
+  const [model, setModel] = useState("gpt-4.1-mini");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [streamingMessage, setStreamingMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -85,86 +79,6 @@ export function ChatClient() {
     }
   }, [input]);
 
-  // Load conversations on mount
-  useEffect(() => {
-    loadConversations();
-  }, []);
-
-  const loadConversations = async () => {
-    try {
-      const response = await fetch("/api/conversations");
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data);
-      }
-    } catch (error) {
-      console.error("Failed to load conversations:", error);
-    }
-  };
-
-  const loadConversation = async (id: number) => {
-    try {
-      const response = await fetch(`/api/conversations/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentConversationId(id);
-        setMessages(data.messages || []);
-      }
-    } catch (error) {
-      console.error("Failed to load conversation:", error);
-    }
-  };
-
-  const createNewConversation = async () => {
-    try {
-      const response = await fetch("/api/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "New Chat" }),
-      });
-
-      if (response.ok) {
-        const newConversation = await response.json();
-        setConversations([newConversation, ...conversations]);
-        setCurrentConversationId(newConversation.id);
-        setMessages([]);
-      }
-    } catch (error) {
-      console.error("Failed to create conversation:", error);
-    }
-  };
-
-  const deleteConversation = async (id: number) => {
-    try {
-      const response = await fetch(`/api/conversations/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setConversations(conversations.filter((c) => c.id !== id));
-        if (currentConversationId === id) {
-          setCurrentConversationId(null);
-          setMessages([]);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to delete conversation:", error);
-    }
-  };
-
-  const updateConversationTitle = async (id: number, title: string) => {
-    try {
-      await fetch(`/api/conversations/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
-      });
-      loadConversations();
-    } catch (error) {
-      console.error("Failed to update conversation title:", error);
-    }
-  };
-
   const sendMessage = async (e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
 
@@ -173,23 +87,13 @@ export function ChatClient() {
     // Create conversation if none exists
     let conversationId = currentConversationId;
     if (!conversationId) {
-      try {
-        const response = await fetch("/api/conversations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: input.trim().slice(0, 50) }),
-        });
-
-        if (response.ok) {
-          const newConversation = await response.json();
-          conversationId = newConversation.id;
-          setCurrentConversationId(conversationId);
-          setConversations([newConversation, ...conversations]);
-        }
-      } catch (error) {
-        console.error("Failed to create conversation:", error);
+      const newConversation = await createNewConversation(
+        input.trim().slice(0, 50)
+      );
+      if (!newConversation) {
         return;
       }
+      conversationId = newConversation.id;
     }
 
     const userMessage: Message = {
@@ -319,9 +223,7 @@ export function ChatClient() {
         <div className="sticky top-0 z-10 h-14 border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#212121]/80 backdrop-blur-md flex items-center justify-between px-3">
           <div className="flex-1"></div>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {model
-              .replace(/-/g, " ")
-              .replace(/\b\w/g, (char) => char.toUpperCase())}
+            {getModelLabel(model)}
           </div>
           <div className="flex-1 flex justify-end">
             <Button

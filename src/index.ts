@@ -25,7 +25,7 @@ const server = serve({
           const body = await req.json();
           const {
             messages,
-            model = "gpt-4o-mini",
+            model = "gpt-4.1-mini",
             systemPrompt,
             conversationId,
           } = body;
@@ -61,6 +61,10 @@ const server = serve({
 
           // Determine which AI provider to use based on model name
           let aiModel;
+
+          // List of LM Studio models (local models)
+          const lmStudioModels = ["huihui-gpt-oss-20b-abliterated"];
+
           if (model.startsWith("claude-")) {
             // Anthropic Claude models
             const anthropic = createAnthropic({
@@ -73,6 +77,14 @@ const server = serve({
               apiKey: process.env.GOOGLE_API_KEY,
             });
             aiModel = google(model);
+          } else if (lmStudioModels.includes(model)) {
+            // LM Studio models (local OpenAI-compatible API)
+            const lmStudio = createOpenAI({
+              baseURL:
+                process.env.LMSTUDIO_BASE_URL || "http://localhost:1234/v1",
+              apiKey: "lm-studio", // LM Studio doesn't require a real API key
+            });
+            aiModel = lmStudio(model);
           } else {
             // Default to OpenAI
             const openai = createOpenAI({

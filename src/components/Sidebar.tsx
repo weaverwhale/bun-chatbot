@@ -56,7 +56,7 @@ export function Sidebar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onNewConversation}
+            onClick={() => onNewConversation()}
             className="fixed top-2 left-15 z-50 h-10 w-10 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
             aria-label="New conversation"
           >
@@ -86,7 +86,7 @@ export function Sidebar({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onNewConversation}
+              onClick={() => onNewConversation()}
               className=" hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
             >
               <Plus className="w-4 h-4" />
