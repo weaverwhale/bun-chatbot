@@ -46,8 +46,8 @@ export function ChatClient() {
     currentConversationId,
     messages,
     setMessages,
-    loadConversation,
-    createNewConversation,
+    loadConversation: loadConversationFromHook,
+    createNewConversation: createNewConversationFromHook,
     deleteConversation,
     updateConversationTitle,
   } = useConversations();
@@ -61,6 +61,18 @@ export function ChatClient() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Wrapper functions to handle model state
+  const loadConversation = async (id: number) => {
+    const conversation = await loadConversationFromHook(id);
+    if (conversation && conversation.model) {
+      setModel(conversation.model);
+    }
+  };
+
+  const createNewConversation = async (title?: string) => {
+    return await createNewConversationFromHook(title || "New Chat", model);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -290,7 +302,7 @@ export function ChatClient() {
                     {/* Message Content */}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
-                        {message.role === "user" ? "You" : "AI"}
+                        {message.role === "user" ? "You" : getModelLabel(model)}
                       </div>
                       <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 prose prose-slate dark:prose-invert max-w-none prose-pre:bg-[#0d1117] prose-pre:text-gray-100 prose-code:text-sm">
                         {message.role === "user" ? (
@@ -321,7 +333,7 @@ export function ChatClient() {
 
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
-                        AI
+                        {getModelLabel(model)}
                       </div>
                       <div className="flex items-center gap-2 text-gray-500">
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -342,7 +354,7 @@ export function ChatClient() {
 
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-100">
-                        Bun
+                        {getModelLabel(model)}
                       </div>
                       <div className="text-[15px] leading-7 text-gray-800 dark:text-gray-100 prose prose-slate dark:prose-invert max-w-none prose-pre:bg-[#0d1117] prose-pre:text-gray-100 prose-code:text-sm">
                         <ReactMarkdown

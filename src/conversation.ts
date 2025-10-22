@@ -8,6 +8,7 @@ db.run(`
   CREATE TABLE IF NOT EXISTS conversations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
+    model TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
@@ -23,6 +24,22 @@ db.run(`
     FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE
   )
 `);
+
+// Migration: Add model column if it doesn't exist
+try {
+  const tableInfo = db.query("PRAGMA table_info(conversations)").all() as any[];
+  const hasModelColumn = tableInfo.some((col) => col.name === "model");
+
+  if (!hasModelColumn) {
+    console.log(
+      "Migrating database: Adding model column to conversations table"
+    );
+    db.run("ALTER TABLE conversations ADD COLUMN model TEXT");
+    console.log("Migration completed successfully");
+  }
+} catch (error) {
+  console.error("Migration error:", error);
+}
 
 // Conversation route handlers
 export const conversationRoutes = {
@@ -46,11 +63,12 @@ export const conversationRoutes = {
     async POST(req: Request) {
       try {
         const body = await req.json();
-        const { title = "New Chat" } = body;
+        const { title = "New Chat", model } = body;
 
-        const result = db.run("INSERT INTO conversations (title) VALUES (?)", [
-          title,
-        ]);
+        const result = db.run(
+          "INSERT INTO conversations (title, model) VALUES (?, ?)",
+          [title, model || null]
+        );
 
         const conversation = db
           .query("SELECT * FROM conversations WHERE id = ?")
@@ -103,15 +121,34 @@ export const conversationRoutes = {
       try {
         const id = (req as any).params.id;
         const body = await req.json();
-        const { title } = body;
+        const { title, model } = body;
 
-        if (!title) {
-          return Response.json({ error: "Title is required" }, { status: 400 });
+        if (!title && !model) {
+          return Response.json(
+            { error: "Title or model is required" },
+            { status: 400 }
+          );
         }
 
+        // Build dynamic query based on what's being updated
+        const updates = [];
+        const values = [];
+
+        if (title) {
+          updates.push("title = ?");
+          values.push(title);
+        }
+        if (model !== undefined) {
+          updates.push("model = ?");
+          values.push(model);
+        }
+
+        updates.push("updated_at = CURRENT_TIMESTAMP");
+        values.push(id);
+
         db.run(
-          "UPDATE conversations SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-          [title, id]
+          `UPDATE conversations SET ${updates.join(", ")} WHERE id = ?`,
+          values
         );
 
         const conversation = db

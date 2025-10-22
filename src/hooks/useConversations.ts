@@ -9,6 +9,7 @@ export interface Message {
 export interface Conversation {
   id: number;
   title: string;
+  model?: string;
   created_at: string;
   updated_at: string;
   messages?: Message[];
@@ -45,18 +46,23 @@ export function useConversations() {
         const data = await response.json();
         setCurrentConversationId(id);
         setMessages(data.messages || []);
+        return data as Conversation;
       }
     } catch (error) {
       console.error("Failed to load conversation:", error);
     }
+    return null;
   };
 
-  const createNewConversation = async (title: string = "New Chat") => {
+  const createNewConversation = async (
+    title: string = "New Chat",
+    model?: string
+  ) => {
     try {
       const response = await fetch("/api/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, model }),
       });
 
       if (response.ok) {
