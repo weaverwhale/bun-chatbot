@@ -4,7 +4,6 @@ import {
   Plus,
   Trash2,
   Menu,
-  X,
   PanelLeftClose,
 } from "lucide-react";
 import { useState } from "react";
