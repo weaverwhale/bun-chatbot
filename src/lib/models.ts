@@ -5,9 +5,13 @@ export interface ModelOption {
 }
 
 export const availableModels: ModelOption[] = [
-  { value: "gpt-4.1-mini", label: "GPT-4.1 Mini", provider: "OpenAI" },
   {
-    value: "claude-4.5-sonnet",
+    value: "gpt-4.1-mini",
+    label: "GPT-4.1 Mini",
+    provider: "OpenAI",
+  },
+  {
+    value: "claude-sonnet-4-5-20250929",
     label: "Claude 4.5 Sonnet",
     provider: "Anthropic",
   },

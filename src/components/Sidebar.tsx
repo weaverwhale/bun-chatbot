@@ -19,6 +19,8 @@ interface Conversation {
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  loading: boolean;
+  error: string | null;
   conversations: Conversation[];
   currentConversationId: number | null;
   onSelectConversation: (id: number) => void;
@@ -29,6 +31,8 @@ interface SidebarProps {
 export function Sidebar({
   isOpen,
   onToggle,
+  loading,
+  error,
   conversations,
   currentConversationId,
   onSelectConversation,
@@ -95,8 +99,16 @@ export function Sidebar({
 
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto px-2 py-2 border-t border-gray-200 dark:border-white/10">
-            {conversations.length === 0 ? (
-              <div className="text-center text-gray-400 dark:text-white/40 text-sm py-8 px-4">
+            {loading ? (
+              <div className="text-center text-gray-400 dark:text-white/40 text-sm py-3 px-4">
+                Loading conversations...
+              </div>
+            ) : error ? (
+              <div className="text-center text-gray-400 dark:text-white/40 text-sm py-3 px-4">
+                {error}
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="text-center text-gray-400 dark:text-white/40 text-sm py-3 px-4">
                 No conversations yet
               </div>
             ) : (

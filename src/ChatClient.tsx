@@ -34,6 +34,8 @@ export function ChatClient() {
     conversations,
     currentConversationId,
     messages,
+    loading: loadingConversations,
+    error: errorConversations,
     setMessages,
     loadConversation: loadConversationFromHook,
     createNewConversation: createNewConversationFromHook,
@@ -202,6 +204,8 @@ export function ChatClient() {
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        loading={loadingConversations}
+        error={errorConversations}
         conversations={conversations}
         currentConversationId={currentConversationId}
         onSelectConversation={loadConversation}

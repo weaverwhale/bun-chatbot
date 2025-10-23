@@ -89,7 +89,7 @@ With the following `frontend.tsx`:
 import React from "react";
 
 // import .css files directly and it works
-import './index.css';
+import './styles/index.css';
 
 import { createRoot } from "react-dom/client";
 

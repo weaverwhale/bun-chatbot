@@ -21,6 +21,8 @@ export function useConversations() {
     number | null
   >(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Load conversations on mount
   useEffect(() => {
@@ -29,16 +31,23 @@ export function useConversations() {
 
   const loadConversations = async () => {
     try {
+      setLoading(true);
       const response = await api("/api/conversations", {
         method: "GET",
       });
       if (response.error) {
         console.error("Failed to load conversations:", response.error);
+        setError(response.error.message || "Failed to load conversations");
         return;
       }
       setConversations(response.data);
     } catch (error) {
       console.error("Failed to load conversations:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to load conversations"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,6 +141,8 @@ export function useConversations() {
     conversations,
     currentConversationId,
     messages,
+    loading,
+    error,
     setCurrentConversationId,
     setMessages,
     loadConversations,

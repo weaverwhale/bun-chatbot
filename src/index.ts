@@ -4,6 +4,7 @@ import { apiRouter } from "@/api/router";
 
 const server = serve({
   port: process.env.PORT || 6789,
+  idleTimeout: 120, // 2 minutes for AI streaming with tools
 
   routes: {
     // API routes are handled by better-call router

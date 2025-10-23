@@ -1,12 +1,10 @@
 import { z } from "zod";
 import { streamText, stepCountIs } from "ai";
 import { createEndpoint } from "better-call";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { tools, toolDisplayNames } from "@/lib/tools";
 import { db } from "@/conversation";
-import { DEFAULT_MODEL } from "@/lib/models";
+import { DEFAULT_MODEL, availableModels } from "@/lib/models";
+import { DEFAULT_CLIENT, getClient } from "@/lib/clients";
 
 // Schema definitions
 const MessageSchema = z.object({
@@ -70,42 +68,20 @@ export const chat = createEndpoint(
       }
     }
 
-    // Determine which AI provider to use based on model name
-    let aiModel;
+    // Find the model in the available models
+    const currentModel = availableModels.find((m) => m.value === model);
+    const client = getClient(currentModel?.provider || DEFAULT_CLIENT);
+    const resolvedModel = client(currentModel?.value || DEFAULT_MODEL);
 
-    // List of LM Studio models (local models)
-    const lmStudioModels = ["huihui-gpt-oss-20b-abliterated"];
-
-    if (model.startsWith("claude-")) {
-      // Anthropic Claude models
-      const anthropic = createAnthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY,
+    if (!currentModel) {
+      throw ctx.error(400, {
+        error: "Invalid model",
       });
-      aiModel = anthropic(model);
-    } else if (model.startsWith("gemini-")) {
-      // Google Gemini models
-      const google = createGoogleGenerativeAI({
-        apiKey: process.env.GOOGLE_API_KEY,
-      });
-      aiModel = google(model);
-    } else if (lmStudioModels.includes(model)) {
-      // LM Studio models (local OpenAI-compatible API)
-      const lmStudio = createOpenAI({
-        baseURL: process.env.LMSTUDIO_BASE_URL || "http://localhost:1234/v1",
-        apiKey: "lm-studio", // LM Studio doesn't require a real API key
-      });
-      aiModel = lmStudio(model);
-    } else {
-      // Default to OpenAI
-      const openai = createOpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-      aiModel = openai(model);
     }
 
     // Create streaming response using AI SDK
     const result = streamText({
-      model: aiModel,
+      model: resolvedModel,
       messages,
       system: systemPrompt || undefined,
       tools,
