@@ -49,7 +49,7 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="fixed top-[9.5px] left-2 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
+            className="fixed top-2 left-2 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             aria-label="Open sidebar"
           >
             <PanelLeftOpen className="w-4 h-4" />
@@ -60,7 +60,7 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={() => onNewConversation()}
-            className="fixed top-[9.5px] left-12 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
+            className="fixed top-2 left-12 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             aria-label="New conversation"
           >
             <Plus className="w-4 h-4" />
@@ -76,7 +76,7 @@ export function Sidebar({
       >
         <div className="flex flex-col h-full">
           {/* Header with Close and New Chat Buttons */}
-          <div className="px-2 py-[calc(0.65rem-1px)] shrink-0 flex items-center justify-between gap-2">
+          <div className="p-2 shrink-0 flex items-center justify-between gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -117,7 +117,7 @@ export function Sidebar({
                     key={conversation.id}
                     className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                       currentConversationId === conversation.id
-                        ? "bg-gray-100 dark:bg-white/10"
+                        ? "bg-black/5 dark:bg-white/10"
                         : "hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
                     onMouseEnter={() => setHoveredId(conversation.id)}
