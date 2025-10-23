@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "@/api/client";
 
-export interface Message {
-  role: "user" | "assistant";
-  content: string;
-  timestamp?: string;
-}
-
 export interface Conversation {
   id: number;
   title: string;
@@ -20,7 +14,6 @@ export function useConversations() {
   const [currentConversationId, setCurrentConversationId] = useState<
     number | null
   >(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,17 +55,6 @@ export function useConversations() {
         return null;
       }
       setCurrentConversationId(id);
-      const validMessages = response.data.messages
-        .filter(
-          (msg): msg is typeof msg & { role: "user" | "assistant" } =>
-            msg.role === "user" || msg.role === "assistant"
-        )
-        .map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-          timestamp: msg.timestamp,
-        }));
-      setMessages(validMessages);
       return response.data;
     } catch (error) {
       console.error("Failed to load conversation:", error);
@@ -92,9 +74,8 @@ export function useConversations() {
         console.error("Failed to create conversation:", response.error);
         return null;
       }
-      setConversations([response.data, ...conversations]);
+      setConversations((prev) => [response.data, ...prev]);
       setCurrentConversationId(response.data.id);
-      setMessages([]);
       return response.data;
     } catch (error) {
       console.error("Failed to create conversation:", error);
@@ -111,10 +92,9 @@ export function useConversations() {
         console.error("Failed to delete conversation:", response.error);
         return;
       }
-      setConversations(conversations.filter((c) => c.id !== id));
+      setConversations((prev) => prev.filter((c) => c.id !== id));
       if (currentConversationId === id) {
         setCurrentConversationId(null);
-        setMessages([]);
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
@@ -131,24 +111,34 @@ export function useConversations() {
         console.error("Failed to update conversation title:", response.error);
         return;
       }
-      loadConversations();
+      // Update the conversation locally instead of reloading all conversations
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? { ...c, title, updated_at: response.data.updated_at }
+            : c
+        )
+      );
     } catch (error) {
       console.error("Failed to update conversation title:", error);
     }
   };
 
+  const clearCurrentConversation = () => {
+    setCurrentConversationId(null);
+  };
+
   return {
     conversations,
     currentConversationId,
-    messages,
     loading,
     error,
     setCurrentConversationId,
-    setMessages,
     loadConversations,
     loadConversation,
     createNewConversation,
     deleteConversation,
     updateConversationTitle,
+    clearCurrentConversation,
   };
 }

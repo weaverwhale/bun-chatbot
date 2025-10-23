@@ -1,25 +1,26 @@
 import { z } from "zod";
-import { streamText, stepCountIs } from "ai";
+import {
+  streamText,
+  stepCountIs,
+  convertToModelMessages,
+  type UIMessage,
+} from "ai";
 import { createEndpoint } from "better-call";
-import { tools, toolDisplayNames } from "@/lib/tools";
-import { db } from "@/conversation";
+import { tools } from "@/lib/tools";
+import { db } from "@/db";
 import { DEFAULT_MODEL, availableModels } from "@/lib/models";
 import { DEFAULT_CLIENT, getClient } from "@/lib/clients";
 
+// Database row types
+interface DBMessage {
+  id: number;
+  conversation_id: number;
+  role: string;
+  content: string;
+  timestamp: string;
+}
+
 // Schema definitions
-const MessageSchema = z.object({
-  role: z.enum(["user", "assistant", "system"]),
-  content: z.string(),
-});
-
-const DBMessageSchema = z.object({
-  id: z.number(),
-  conversation_id: z.number(),
-  role: z.string(),
-  content: z.string(),
-  timestamp: z.string(),
-});
-
 const ConversationSchema = z.object({
   id: z.number(),
   title: z.string(),
@@ -28,24 +29,43 @@ const ConversationSchema = z.object({
   updated_at: z.string(),
 });
 
-const ConversationWithMessagesSchema = ConversationSchema.extend({
-  messages: z.array(DBMessageSchema),
-});
+// Chat request body schema
+const ChatRequestSchema = z
+  .object({
+    messages: z.array(z.any()), // UIMessage structure is complex, validated by AI SDK
+    model: z.string(),
+    systemPrompt: z.string().optional(),
+    conversationId: z.number().nullable().optional(),
+  })
+  .catchall(z.unknown());
+
+// Helper to extract text content from UIMessage
+function extractTextContent(message: UIMessage): string {
+  // Handle parts-based content
+  if (message.parts && Array.isArray(message.parts)) {
+    return message.parts
+      .filter((part) => part.type === "text")
+      .map((part) => (part.type === "text" ? part.text : ""))
+      .join("");
+  }
+  return "";
+}
 
 // Chat endpoint
 export const chat = createEndpoint(
   "/api/chat",
   {
     method: "POST",
-    body: z.object({
-      messages: z.array(MessageSchema),
-      model: z.string().default(DEFAULT_MODEL),
-      systemPrompt: z.string().optional(),
-      conversationId: z.number().optional(),
-    }),
+    body: ChatRequestSchema,
   },
   async (ctx) => {
     const { messages, model, systemPrompt, conversationId } = ctx.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      throw ctx.error(400, {
+        error: "Messages array is required",
+      });
+    }
 
     if (!process.env.OPENAI_API_KEY) {
       throw ctx.error(500, {
@@ -56,10 +76,11 @@ export const chat = createEndpoint(
     // Save user message to database if conversationId is provided
     if (conversationId) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage) {
+      if (lastMessage && lastMessage.role === "user") {
+        const content = extractTextContent(lastMessage);
         db.run(
           "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
-          [conversationId, lastMessage.role, lastMessage.content]
+          [conversationId, lastMessage.role, content]
         );
         db.run(
           "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
@@ -79,11 +100,30 @@ export const chat = createEndpoint(
       });
     }
 
+    // Add system prompt if provided
+    const messagesWithSystem: UIMessage[] = systemPrompt
+      ? [
+          {
+            role: "system" as const,
+            id: `system-${Date.now()}`,
+            parts: [
+              {
+                type: "text" as const,
+                text: systemPrompt,
+              },
+            ],
+          } as UIMessage,
+          ...messages,
+        ]
+      : messages;
+
+    // Convert UIMessages to model messages format
+    const modelMessages = convertToModelMessages(messagesWithSystem);
+
     // Create streaming response using AI SDK
     const result = streamText({
       model: resolvedModel,
-      messages,
-      system: systemPrompt || undefined,
+      messages: modelMessages,
       tools,
       stopWhen: stepCountIs(10),
       async onFinish({ text }) {
@@ -101,40 +141,8 @@ export const chat = createEndpoint(
       },
     });
 
-    // Use fullStream to show tool usage and stream text properly
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of result.fullStream) {
-            if (chunk.type === "tool-call") {
-              // Get the display name from the mapping
-              const toolDisplayName =
-                toolDisplayNames[chunk.toolName] || chunk.toolName;
-              // Send tool call indicator
-              controller.enqueue(
-                encoder.encode(`\n\n**${toolDisplayName}**...\n\n`)
-              );
-            } else if (chunk.type === "text-delta") {
-              // Stream text as it comes
-              controller.enqueue(encoder.encode(chunk.text));
-            }
-          }
-          controller.close();
-        } catch (error) {
-          console.error("Stream error:", error);
-          controller.error(error);
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+    // Return AI SDK formatted response with tool support
+    return result.toUIMessageStreamResponse();
   }
 );
 
@@ -178,7 +186,7 @@ export const createConversation = createEndpoint(
   }
 );
 
-// Get conversation with messages
+// Get conversation with messages (converted to UIMessage format)
 export const getConversation = createEndpoint(
   "/api/conversations/:id",
   {
@@ -196,13 +204,23 @@ export const getConversation = createEndpoint(
       });
     }
 
-    const messages = db
+    const dbMessages = db
       .query(
         "SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC"
       )
-      .all(id);
+      .all(id) as DBMessage[];
 
-    return ConversationWithMessagesSchema.parse({ ...conversation, messages });
+    // Convert DB messages to UIMessage format
+    const uiMessages = dbMessages.map((msg) => ({
+      id: `${msg.id}`,
+      role: msg.role,
+      content: msg.content, // Use content format for compatibility
+    }));
+
+    return {
+      ...ConversationSchema.parse(conversation),
+      messages: uiMessages,
+    };
   }
 );
 
@@ -264,6 +282,41 @@ export const deleteConversation = createEndpoint(
   async (ctx) => {
     const id = ctx.params.id;
     db.run("DELETE FROM conversations WHERE id = ?", [id]);
+    return { success: true };
+  }
+);
+
+// Save messages to conversation
+export const saveMessages = createEndpoint(
+  "/api/conversations/:id/messages",
+  {
+    method: "POST",
+    body: z.object({
+      messages: z.array(
+        z.object({
+          role: z.string(),
+          content: z.string(),
+        })
+      ),
+    }),
+  },
+  async (ctx) => {
+    const id = ctx.params.id;
+    const { messages } = ctx.body;
+
+    // Insert all messages
+    for (const message of messages) {
+      db.run(
+        "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
+        [id, message.role, message.content]
+      );
+    }
+
+    db.run(
+      "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [id]
+    );
+
     return { success: true };
   }
 );
