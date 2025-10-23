@@ -29,7 +29,7 @@ export const ChatHeader = ({
           className="h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
           aria-label="Toggle dark mode"
         >
-          {isDarkMode ? (
+          {!isDarkMode ? (
             <Sun className="w-4 h-4" />
           ) : (
             <Moon className="w-4 h-4" />
