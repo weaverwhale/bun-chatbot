@@ -9,7 +9,7 @@ import "highlight.js/styles/github-dark.css";
 import { getModelLabel } from "@/lib/models";
 import { examplePrompts } from "@/lib/prompts";
 import { extractMessageContent } from "@/lib/utils";
-import { ToolOutput } from "@/components/chat/ToolOutput";
+import { ChatToolOutput } from "@/components/ChatToolOutput";
 
 // Tool part type with AI SDK properties
 interface ToolPart {
@@ -158,7 +158,9 @@ export const ChatMessages = ({
                                     {isComplete &&
                                       part.output !== undefined && (
                                         <div className="pl-6 mt-3">
-                                          <ToolOutput output={part.output} />
+                                          <ChatToolOutput
+                                            output={part.output}
+                                          />
                                         </div>
                                       )}
                                     {isError && part.errorText && (

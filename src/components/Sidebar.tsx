@@ -3,7 +3,7 @@ import {
   MessageSquare,
   Plus,
   Trash2,
-  Menu,
+  PanelLeftOpen,
   PanelLeftClose,
 } from "lucide-react";
 import { useState } from "react";
@@ -49,10 +49,10 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="fixed top-2.5 left-3 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
+            className="fixed top-[9.5px] left-2 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             aria-label="Open sidebar"
           >
-            <Menu className="w-4 h-4" />
+            <PanelLeftOpen className="w-4 h-4" />
           </Button>
 
           {/* New conversation button (shown when sidebar is closed) */}
@@ -60,7 +60,7 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={() => onNewConversation()}
-            className="fixed top-2.5 left-15 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
+            className="fixed top-[9.5px] left-12 z-50 h-9 w-9 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-gray-600 dark:text-gray-300"
             aria-label="New conversation"
           >
             <Plus className="w-4 h-4" />
@@ -70,7 +70,7 @@ export function Sidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-white border-r border-gray-200 dark:border-white/10 z-40 flex flex-col ${
+        className={`fixed left-0 top-0 h-full bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-white border-r transition-all duration-200 border-gray-200 dark:border-white/10 z-100 flex flex-col ${
           isOpen ? "w-[260px]" : "w-0"
         } overflow-hidden`}
       >

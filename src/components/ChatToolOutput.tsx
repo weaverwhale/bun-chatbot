@@ -2,7 +2,7 @@ import { useState } from "react";
 import { type JSONValue } from "ai";
 import { Code2 } from "lucide-react";
 
-export const ToolOutput = ({ output }: { output: JSONValue }) => {
+export const ChatToolOutput = ({ output }: { output: JSONValue }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!output) return null;
@@ -43,7 +43,7 @@ export const ToolOutput = ({ output }: { output: JSONValue }) => {
         </span>
       </div>
       <div
-        className={`${isLong && !isExpanded ? "max-h-40" : "max-h-96"} overflow-y-auto`}
+        className={`${isLong && !isExpanded ? "max-h-40" : ""} overflow-y-auto`}
       >
         <pre className="text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <code>

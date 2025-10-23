@@ -10,14 +10,15 @@ import { DefaultChatTransport } from "ai";
 
 import { Sidebar } from "@/components/Sidebar";
 import { SettingsModal } from "@/components/SettingsModal";
-import { ChatHeader } from "@/components/chat/ChatHeader";
+import { ChatHeader } from "@/components/ChatHeader";
+import { ChatMessages } from "@/components/ChatMessages";
+import { ChatInput } from "@/components/ChatInput";
 
 import { useConversations } from "@/hooks/useConversations";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { useModelSettings } from "@/hooks/useModelSettings";
+
 import { getTimeOfDay, extractMessageContent } from "@/lib/utils";
-import { ChatMessages } from "@/components/chat/ChatMessages";
-import { ChatInput } from "./components/chat/ChatInput";
 
 export function Chat() {
   const {
@@ -226,7 +227,7 @@ export function Chat() {
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? "lg:ml-[260px]" : "ml-0"}`}
+        className={`flex-1 flex flex-col transition-all duration-200 ${isSidebarOpen ? "lg:ml-[260px]" : "ml-0"}`}
       >
         <ChatHeader
           model={model}

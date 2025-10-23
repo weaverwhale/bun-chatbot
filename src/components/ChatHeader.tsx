@@ -16,7 +16,7 @@ export const ChatHeader = ({
   setIsSettingsOpen,
 }: ChatHeaderProps) => {
   return (
-    <div className="sticky top-0 z-10 h-14 border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#212121]/80 backdrop-blur-md flex items-center justify-between px-3">
+    <div className="sticky top-0 z-10 h-14 border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#212121]/80 backdrop-blur-md flex items-center justify-between px-2">
       <div className="flex-1"></div>
       <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
         {getModelLabel(model)}
